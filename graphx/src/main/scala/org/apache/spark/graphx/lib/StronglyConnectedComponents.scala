@@ -46,7 +46,8 @@ object StronglyConnectedComponents {
 
     // helper variables to unpersist cached graphs
     var prevSccGraph = sccGraph
-
+    var preSccWorkGraph = sccWorkGraph
+    
     var numVertices = sccWorkGraph.numVertices
     var iter = 0
     while (sccWorkGraph.numVertices > 0 && iter < numIter) {
@@ -58,6 +59,11 @@ object StronglyConnectedComponents {
         }.outerJoinVertices(sccWorkGraph.inDegrees) {
           (vid, data, degreeOpt) => if (degreeOpt.isDefined) data else (vid, true)
         }.cache()
+        sccWorkGraph.vertices.count()
+        sccWorkGraph.edges.count()
+        preSccWorkGraph.unpersist()
+        var preSccWorkGraph = sccWorkGraph
+        
 
         // get all vertices to be removed
         val finalVertices = sccWorkGraph.vertices
@@ -77,6 +83,10 @@ object StronglyConnectedComponents {
 
         // only keep vertices that are not final
         sccWorkGraph = sccWorkGraph.subgraph(vpred = (vid, data) => !data._2).cache()
+        sccWorkGraph.vertices.count()
+        sccWorkGraph.edges.count()
+        preSccWorkGraph.unpersist()
+        var preSccWorkGraph = sccWorkGraph
       } while (sccWorkGraph.numVertices < numVertices)
 
       // if iter < numIter at this point sccGraph that is returned
